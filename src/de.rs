@@ -48,6 +48,17 @@ where
     Ok(value)
 }
 
+/// Same as [from_slice] except it allows trailing data
+pub fn from_slice_unstrict<'a, T>(buf: &'a [u8]) -> Result<T, DecodeError<Infallible>>
+where
+    T: de::Deserialize<'a>,
+{
+    let reader = SliceReader::new(buf);
+    let mut deserializer = Deserializer::from_reader(reader);
+    let value = serde::Deserialize::deserialize(&mut deserializer)?;
+    Ok(value)
+}
+
 /// Decodes a value from CBOR data in a reader.
 ///
 /// # Examples
@@ -79,6 +90,19 @@ where
     let mut deserializer = Deserializer::from_reader(reader);
     let value = serde::Deserialize::deserialize(&mut deserializer)?;
     deserializer.end()?;
+    Ok(value)
+}
+
+/// Same as [from_reader] except it allows trailing data
+#[cfg(feature = "std")]
+pub fn from_reader_unstrict<T, R>(reader: R) -> Result<T, DecodeError<std::io::Error>>
+where
+    T: de::DeserializeOwned,
+    R: std::io::BufRead,
+{
+    let reader = IoReader::new(reader);
+    let mut deserializer = Deserializer::from_reader(reader);
+    let value = serde::Deserialize::deserialize(&mut deserializer)?;
     Ok(value)
 }
 
